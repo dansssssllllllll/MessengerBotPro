@@ -149,6 +149,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const command = getCommand(commandName);
         
         if (command) {
+          // Check if command is operator-only
+          if (command.operatorOnly) {
+            // Get the user to check if they're an operator
+            const user = await storage.getUser(userId);
+            
+            // For this implementation, we'll consider the user with username 'Danieldev12' as operator
+            const isOperator = user?.username === 'Danieldev12';
+            
+            if (!isOperator) {
+              // User is not authorized to use this command
+              const botMessage = await storage.createMessage({
+                userId,
+                content: JSON.stringify({ 
+                  title: "Access Denied", 
+                  content: "This command is restricted to operators only." 
+                }),
+                isBot: true
+              });
+              
+              return res.json({
+                userMessage: message,
+                botMessage
+              });
+            }
+          }
+          
           try {
             const response = await command.handler(userId);
             
@@ -206,9 +232,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/commands", authenticateUser, async (req, res) => {
     try {
-      const commandsList = Object.values(commands).map(cmd => ({
+      // Get user ID from session
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Get the user to check if they're an operator
+      const user = await storage.getUser(userId);
+      const isOperator = user?.username === 'Danieldev12';
+      
+      // Filter commands based on user role
+      const filteredCommands = Object.values(commands).filter(cmd => 
+        !cmd.operatorOnly || (cmd.operatorOnly && isOperator)
+      );
+      
+      const commandsList = filteredCommands.map(cmd => ({
         name: cmd.name,
-        description: cmd.description
+        description: cmd.description,
+        operatorOnly: cmd.operatorOnly || false
       }));
       
       res.json(commandsList);

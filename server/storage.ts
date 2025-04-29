@@ -80,9 +80,12 @@ export class MemStorage implements IStorage {
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const id = this.messageIdCounter++;
+    // Create message with explicit properties to avoid type errors
     const message: Message = {
-      ...insertMessage,
       id,
+      userId: insertMessage.userId,
+      content: insertMessage.content,
+      isBot: insertMessage.isBot || false, // Use logical OR to ensure boolean
       createdAt: new Date()
     };
     this.messages.set(id, message);
