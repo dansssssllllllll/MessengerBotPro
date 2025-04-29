@@ -45,5 +45,6 @@ export type Message = typeof messages.$inferSelect;
 export type Command = {
   name: string;
   description: string;
+  operatorOnly?: boolean; // Flag to restrict command to operators only
   handler: (userId: number) => Promise<string | { title?: string; content: string }>;
 };
