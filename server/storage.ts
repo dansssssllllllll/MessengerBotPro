@@ -91,3 +91,24 @@ export class MemStorage implements IStorage {
 }
 
 export const storage = new MemStorage();
+
+// Initialize with operator account
+(async () => {
+  try {
+    // Check if operator account already exists
+    const existingOperator = await storage.getUserByUsername('Danieldev12');
+    
+    if (!existingOperator) {
+      // Create operator account
+      await storage.createUser({
+        username: 'Danieldev12',
+        password: 'dan122012',
+        fullname: 'Daniel Operator',
+        email: 'operator@example.com'
+      });
+      console.log('Operator account initialized successfully');
+    }
+  } catch (error) {
+    console.error('Error initializing operator account:', error);
+  }
+})();
